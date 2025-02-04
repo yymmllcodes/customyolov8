@@ -22,7 +22,7 @@ def convert_annotation_to_yolo(json_file_path, output_dir):
     with open(output_file_path, 'w') as out_file:
         for shape in shapes:
             label = shape['label']
-            class_index = 0  # Replace with appropriate class index or mapping
+            class_index = 0  # todo Replace with appropriate class index or mapping
             points = shape['segmentation']
             normalized_points = normalize_coordinates(points, img_width, img_height)
             points_str = ' '.join([f"{x} {y}" for x, y in normalized_points])
