@@ -1,0 +1,63 @@
+import os
+import json
+
+def convert_to_yolo_format(json_file, output_dir, class_mapping):
+    """
+    Convert a single JSON annotation file to YOLO format.
+    :param json_file: Path to the JSON annotation file.
+    :param output_dir: Directory where the YOLO format files will be saved.
+    :param class_mapping: Dictionary mapping class names to class IDs.
+    """
+    with open(json_file, 'r') as f:
+        data = json.load(f)
+    
+    img_width = data['imageWidth']
+    img_height = data['imageHeight']
+    
+    shapes = data['shapes']
+    
+    # Prepare the output file path
+    output_file_path = os.path.join(output_dir, os.path.splitext(os.path.basename(json_file))[0] + '.txt')
+    
+    with open(output_file_path, 'w') as out_file:
+        for shape in shapes:
+            label = shape['label']
+            class_id = class_mapping[label]
+            points = shape['points']
+            x_min = min(point[0] for point in points)
+            x_max = max(point[0] for point in points)
+            y_min = min(point[1] for point in points)
+            y_max = max(point[1] for point in points)
+            
+            # Compute the normalized center, width, and height of the bounding box
+            x_center = (x_min + x_max) / 2.0 / img_width
+            y_center = (y_min + y_max) / 2.0 / img_height
+            width = (x_max - x_min) / img_width
+            height = (y_max - y_min) / img_height
+            
+            # Write the annotation in YOLO format
+            out_file.write(f"{class_id} {x_center} {y_center} {width} {height}\n")
+
+def process_dataset(input_dir, output_dir, class_mapping):
+    """
+    Process all JSON annotation files in the input directory and convert them to YOLO format.
+    :param input_dir: Directory containing JSON annotation files.
+    :param output_dir: Directory where the YOLO format files will be saved.
+    :param class_mapping: Dictionary mapping class names to class IDs.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    
+    for filename in os.listdir(input_dir):
+        if filename.endswith('.json'):
+            json_file = os.path.join(input_dir, filename)
+            convert_to_yolo_format(json_file, output_dir, class_mapping)
+
+# Example usage
+input_dir = 'path/to/your/json/files'
+output_dir = 'path/to/save/yolo/files'
+class_mapping = {
+    'class1': 0,
+    'class2': 1,
+    # todo Add more classes as necessary
+}
+process_dataset(input_dir, output_dir, class_mapping)
